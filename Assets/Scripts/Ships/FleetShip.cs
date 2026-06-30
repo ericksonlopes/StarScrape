@@ -43,7 +43,7 @@ namespace StarScrape.Ships
         // --- Sistema de Missão ---
         // Se a nave tem um alvo de missão (ex: asteroide), ela voa até lá em vez de ficar na formação.
         protected Transform missionTarget;
-        [SerializeField] protected float missionSpeed = 0.8f; // Mais alto = mais suave/lento
+        [SerializeField] protected float missionSpeed = 3.0f; // Quanto maior, BEM MAIS LENTA a nave fica na missão
 
         public bool IsOnMission => missionTarget != null;
 
@@ -69,12 +69,13 @@ namespace StarScrape.Ships
                 targetWorldPos = missionTarget.position;
                 transform.position = Vector3.SmoothDamp(transform.position, targetWorldPos, ref velocity, missionSpeed);
                 
-                // Olha para o alvo enquanto está em missão
+                // Olha para o alvo enquanto está em missão (suavemente)
                 Vector3 dir = (missionTarget.position - transform.position).normalized;
                 if (dir.sqrMagnitude > 0.001f)
                 {
                     float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
-                    transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, angle), 5f * Time.deltaTime);
+                    Quaternion targetRot = Quaternion.Euler(0, 0, angle);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 1.5f * Time.deltaTime);
                 }
             }
             else
@@ -89,8 +90,8 @@ namespace StarScrape.Ships
 
                 transform.position = Vector3.SmoothDamp(transform.position, targetWorldPos, ref velocity, smoothTime);
 
-                // Força a nave a olhar sempre para onde a Nave Mãe olha
-                transform.rotation = Mothership.Instance.transform.rotation;
+                // Volta suavemente a olhar para a mesma direção da Nave Mãe
+                transform.rotation = Quaternion.Slerp(transform.rotation, Mothership.Instance.transform.rotation, 2.5f * Time.deltaTime);
             }
             
             // --- Repulsão da Nave Mãe (suave) ---

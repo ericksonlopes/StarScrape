@@ -22,6 +22,18 @@ namespace StarScrape.Environment
             if (Vector3.Distance(transform.position, camPos) > despawnDistance)
             {
                 Despawn();
+                return;
+            }
+
+            // Despawn rápido: se o objeto ficou para TRÁS da Nave Mãe, pode sumir logo.
+            if (Ships.Mothership.Instance != null)
+            {
+                Vector3 localPos = Ships.Mothership.Instance.transform.InverseTransformPoint(transform.position);
+                // Se o Y local for menor que -5, ele já passou da Nave Mãe e ficou pra trás
+                if (localPos.y < -5f)
+                {
+                    Despawn();
+                }
             }
         }
 

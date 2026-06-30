@@ -24,6 +24,7 @@ namespace StarScrape.Ships
 
         private float scanTimer;
         private Asteroid currentTarget;
+        private bool isReturningWithCargo = false;
 
         protected override void Start()
         {
@@ -65,11 +66,30 @@ namespace StarScrape.Ships
             }
             else
             {
-                // Sem alvo: procura um novo asteroide periodicamente
-                if (scanTimer >= scanInterval)
+                if (isReturningWithCargo)
                 {
-                    scanTimer = 0f;
-                    SearchForAsteroid();
+                    // Checa se já chegou de volta na sua posição da formação
+                    if (Mothership.Instance != null)
+                    {
+                        Vector3 worldOffset = Mothership.Instance.transform.rotation * GetFormationOffset();
+                        Vector3 idealPos = Mothership.Instance.transform.position + worldOffset;
+                        
+                        // Se chegou perto o suficiente da formação, "deposita" a carga e volta ao trabalho
+                        if (Vector3.Distance(transform.position, idealPos) < 1.5f)
+                        {
+                            isReturningWithCargo = false;
+                            scanTimer = 0f; // Dá um tempinho antes de escanear de novo
+                        }
+                    }
+                }
+                else
+                {
+                    // Sem alvo e não está retornando: procura um novo asteroide periodicamente
+                    if (scanTimer >= scanInterval)
+                    {
+                        scanTimer = 0f;
+                        SearchForAsteroid();
+                    }
                 }
             }
         }
@@ -117,6 +137,7 @@ namespace StarScrape.Ships
         private void AbandonMission()
         {
             currentTarget = null;
+            isReturningWithCargo = true; // Força a voltar para a base antes de pegar outro alvo
             ClearMission(); // Volta para a formação
         }
 
